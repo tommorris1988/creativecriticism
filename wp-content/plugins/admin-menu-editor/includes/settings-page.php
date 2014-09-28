@@ -125,20 +125,91 @@ $isProVersion = apply_filters('admin_menu_editor_is_pro', false);
 			<tr>
 				<th scope="row">Interface</th>
 				<td>
-					<label>
-						<input type="checkbox" name="hide_advanced_settings"
-							<?php checked($this->options['hide_advanced_settings']); ?>>
-						Hide advanced menu options by default
-					</label>
+					<p>
+						<label>
+							<input type="checkbox" name="hide_advanced_settings"
+								<?php checked($settings['hide_advanced_settings']); ?>>
+							Hide advanced menu options by default
+						</label>
+					</p>
+
+					<?php if ($isProVersion): ?>
+						<p>
+						<label>
+							<input type="checkbox" name="show_deprecated_hide_button"
+								<?php checked($settings['show_deprecated_hide_button']); ?>>
+							Enable the "Show/Hide" toolbar button (not recommended)
+						</label>
+						<br><span class="description">
+							This feature is deprecated and is only kept for backwards compatibility purposes.
+						</span>
+						</p>
+					<?php endif; ?>
 				</td>
 			</tr>
+
+			<tr>
+				<th scope="row">Editor colour scheme</th>
+				<td>
+					<fieldset>
+						<p>
+							<label>
+								<input type="radio" name="ui_colour_scheme" value="classic"
+									<?php checked('classic', $settings['ui_colour_scheme']); ?>>
+								Blue and yellow
+							</label>
+						</p>
+
+						<p>
+							<label>
+								<input type="radio" name="ui_colour_scheme" value="wp-grey"
+									<?php checked('wp-grey', $settings['ui_colour_scheme']); ?>>
+								Grey
+							</label>
+						</p>
+					</fieldset>
+				</td>
+			</tr>
+
+			<?php if ($isProVersion): ?>
+			<tr>
+				<th scope="row">Show submenu icons</th>
+				<td>
+					<fieldset id="ame-submenu-icons-settings">
+						<p>
+							<label>
+								<input type="radio" name="submenu_icons_enabled" value="always"
+									<?php checked('always', $settings['submenu_icons_enabled']); ?>>
+								Always
+							</label>
+						</p>
+
+						<p>
+							<label>
+								<input type="radio" name="submenu_icons_enabled" value="if_custom"
+									<?php checked('if_custom', $settings['submenu_icons_enabled']); ?>>
+								Only when manually selected
+							</label>
+						</p>
+
+						<p>
+							<label>
+								<input type="radio" name="submenu_icons_enabled" value="never"
+									<?php checked('never', $settings['submenu_icons_enabled']); ?>>
+								Never
+							</label>
+						</p>
+					</fieldset>
+				</td>
+			</tr>
+			<?php endif; ?>
 
 			<tr>
 				<th scope="row">Debugging</th>
 				<td>
 					<label>
 						<input type="checkbox" name="security_logging_enabled"
-							<?php checked($this->options['security_logging_enabled']); ?>>
+							<?php checked($settings['security_logging_enabled']); ?>>
 						Show menu access checks performed by the plugin on every admin page
 					</label>
 					<br><span class="description">

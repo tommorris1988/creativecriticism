@@ -5,7 +5,7 @@ Plugin URI: http://www.nsp-code.com
 Description: Posts Order and Post Types Objects Order using a Drag and Drop Sortable javascript capability
 Author: Nsp Code
 Author URI: http://www.nsp-code.com 
-Version: 1.6.2
+Version: 1.7.4
 */
 
 define('CPTPATH',   plugin_dir_path(__FILE__));
@@ -43,7 +43,7 @@ function CPTO_pre_get_posts($query)
     {
         //--  lee@cloudswipe.com requirement
         global $post;
-        if(is_object($post) && $post->ID < 1) 
+        if(is_object($post) && isset($post->ID) && $post->ID < 1)
             { return $query; }  // Stop running the function if this is a virtual page
         //--
            
@@ -84,8 +84,14 @@ function CPTOrderPosts($orderBy, $query)
         
         if (is_admin())
                 {
-                    if ($options['adminsort'] == "1")
-                        $orderBy = "{$wpdb->posts}.menu_order, {$wpdb->posts}.post_date DESC";
+                    
+                    if ($options['adminsort'] == "1" && 
+                        //ignore when ajax Gallery Edit default functionality 
+                        !($options['adminsort'] == "1" && defined('DOING_AJAX') && isset($_REQUEST['action']) && $_REQUEST['action'] == 'query-attachments')
+                        )
+                        {
+                            $orderBy = "{$wpdb->posts}.menu_order, {$wpdb->posts}.post_date DESC";
+                        }
                 }
             else
                 {
@@ -94,7 +100,12 @@ function CPTOrderPosts($orderBy, $query)
                         return($orderBy);
                     
                     if ($options['autosort'] == "1")
-                        $orderBy = "{$wpdb->posts}.menu_order, " . $orderBy;
+                        {
+                            if(trim($orderBy) == '')
+                                $orderBy = "{$wpdb->posts}.menu_order ";
+                            else
+                                $orderBy = "{$wpdb->posts}.menu_order, " . $orderBy;
+                        }
                 }
 
         return($orderBy);
@@ -126,7 +137,7 @@ add_action('admin_menu', 'cpto_plugin_menu');
 function cpto_plugin_menu() 
     {
         include (CPTPATH . '/include/options.php');
-        add_options_page('Post Types Order', '<img class="menu_pto" src="'. CPTURL .'/images/menu-icon.gif" alt="" />Post Types Order', 'manage_options', 'cpto-options', 'cpt_plugin_options');
+        add_options_page('Post Types Order', '<img class="menu_pto" src="'. CPTURL .'/images/menu-icon.png" alt="" />Post Types Order', 'manage_options', 'cpto-options', 'cpt_plugin_options');
     }
 
     
@@ -331,7 +342,7 @@ class Post_Types_Order_Walker extends Walker
         }
 
 
-        function start_el(&$output, $page, $depth = 0, $args = array()) {
+        function start_el(&$output, $page, $depth = 0, $args = array(), $id = 0) {
             if ( $depth )
                 $indent = str_repeat("\t", $depth);
             else
@@ -402,14 +413,20 @@ class CPTO
                             {
 				                foreach( $values as $position => $id ) 
                                     {
-					                    $wpdb->update( $wpdb->posts, array('menu_order' => $position, 'post_parent' => 0), array('ID' => $id) );
+					                    $data = array('menu_order' => $position, 'post_parent' => 0);
+                                        $data = apply_filters('post-types-order_save-ajax-order', $data, $key, $id);
+                                        
+                                        $wpdb->update( $wpdb->posts, $data, array('ID' => $id) );
 				                    } 
 			                } 
                         else 
                             {
 				                foreach( $values as $position => $id ) 
                                     {
-					                    $wpdb->update( $wpdb->posts, array('menu_order' => $position, 'post_parent' => str_replace('item_', '', $key)), array('ID' => $id) );
+					                    $data = array('menu_order' => $position, 'post_parent' => str_replace('item_', '', $key));
+                                        $data = apply_filters('post-types-order_save-ajax-order', $data, $key, $id);
+                                        
+                                        $wpdb->update( $wpdb->posts, $data, array('ID' => $id) );
 				                    }
 			                }
 		            }
@@ -452,7 +469,7 @@ class CPTO
                         else
                             {
                                 if (!is_post_type_hierarchical($post_type_name))
-                                    add_submenu_page('edit.php?post_type='.$post_type_name, 'Re-Order', 'Re-Order', $capability, 'order-post-types-'.$post_type_name, array(&$this, 'SortPage') );
+                                    add_submenu_page('edit.php?post_type='.$post_type_name, __('Re-Order', 'cpt'), __('Re-Order', 'cpt'), $capability, 'order-post-types-'.$post_type_name, array(&$this, 'SortPage') );
                             }
 		            }
 	        }
